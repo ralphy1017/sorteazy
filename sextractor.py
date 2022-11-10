@@ -6,15 +6,15 @@ from matplotlib.ticker import MultipleLocator
 from astropy.table import Table
 import math
 from glob import glob
-
+                    
 class sextractor:
     
     def __init__(self): #make empty data structures and set default psf and sb dictionaries
         self.imfiles = {}
         self.whtfiles = {}
-        self.areas = []
-        self.exposures = []
-        self.catnames = []
+        self.areas = {}
+        self.exposures = {}
+        self.catnames = {}
         
         self.initialize()
         self.auto_psf()
@@ -32,7 +32,7 @@ class sextractor:
         self.lw_pixel = lw_pixel
         
         if self.field != 'N/A':
-            print(f'SExtractor initialized:\nField: {self.field}\nZeropoint: {self.zeropoint}\nConfig File:' +
+            print(f'SExtractor initialized\nField: {self.field}\nZeropoint: {self.zeropoint}\nConfig File:' +
                   f'{self.config_file}\nCatalog Directory: {self.cat_dir}\nImage Directory: {self.image_dir}' +
                   f'\nImage File Pattern: {self.imfile}\nPixel Size: SW-{self.sw_pixel}, LW-{self.lw_pixel}')
 
@@ -44,6 +44,10 @@ class sextractor:
         self.psf_max = {'F090W': 0.11, 'F115W': 0.11, 'F150W': 0.08, 'F182M': 0.085, 'F200W': 0.09,
                         'F210M': 0.1, 'F277W': 0.13, 'F300M': 0.14, 'F335M': 0.15, 'F356W': 0.18,
                         'F360M': 0.17, 'F410M': 0.17, 'F444W': 0.17}
+        
+        self.psf_mag = {'F090W': 26, 'F115W': 26, 'F150W': 26, 'F182M': 26, 'F200W': 26,
+                        'F210M': 26, 'F277W': 26, 'F300M': 26, 'F335M': 26, 'F356W': 26,
+                        'F360M': 26, 'F410M': 26, 'F444W': 26}
     
     def auto_sb(self): #default sensitivity dictionaries
         self.sb_min = {'F090W': 29.6, 'F115W': 29.4, 'F150W': 29.5, 'F182M': 28.1, 'F200W': 29.7,
@@ -58,9 +62,10 @@ class sextractor:
                          'F210M': -5, 'F277W': -5, 'F300M': -5, 'F335M': -5, 'F356W': -4.9,
                          'F360M': -5, 'F410M': -4.9, 'F444W': -5}
             
-    def set_psf(self, filt, fwhm, end): #minimum and maximum FWHM to classify an object as a star
+    def set_psf(self, filt, fwhm, end, mag): #minimum and maximum FWHM to classify an object as a star
         self.psf_fwhm[filt] = fwhm
         self.psf_max[filt] = end
+        self.psf_mag[filt] = mag
         
     def set_sb(self, filt, minimum, turn, slope): #sets surface brightness / point source sensitivity curve
         self.sb_min[filt] = minimum
@@ -87,12 +92,14 @@ class sextractor:
         print('Images Found')
     
     def get_areas(self): #used for number counts    
-        for file in self.whtfiles.values():
+        for i in range(len(self.imfiles)):
+            file = list(self.imfiles.values())[i]
+            filt = list(self.imfiles.keys())[i]
             hdul = fits.open(file)
             data = hdul[0].data
             
             idx = np.where(data > 0)
-            self.areas.append(len(idx[0]) * 0.0009 / 60**4)
+            self.areas[filt] = len(idx[0]) * 0.0009 / 60**4
             
             hdul.close()
             
@@ -100,16 +107,16 @@ class sextractor:
         
     def get_exposures(self): #input to source extractor as gain = exposure time
         for i in range(len(self.imfiles)):
-            hdul = fits.open(list(self.imfiles.values())[i])
-            header = hdul[0].header
-            
+            file = list(self.imfiles.values())[i]
             filt = list(self.imfiles.keys())[i]
-            
+            hdul = fits.open(file)
+            header = hdul[0].header
+                        
             if int(filt[1:4]) < 250: #related to central wavelength (SW)
-                self.exposures.append(header['XPOSURE'] / 8)
+                self.exposures[filt] = header['XPOSURE'] / 8
                 
             elif int(filt[1:4]) >= 250: #related to central wavelength (LW)
-                self.exposures.append(header['XPOSURE'] / 2)
+                self.exposures[filt] = header['XPOSURE'] / 2
                 
             else:
                 print('header matching failed')
@@ -121,15 +128,16 @@ class sextractor:
     def sextract(self, overwrite=True): #run source extractor
         for i in range(len(self.imfiles)):
             catname = os.path.join(self.cat_dir, f'{self.field}_{list(self.imfiles.keys())[i]}_cat.txt')
-            self.catnames.append(catname)
+            filt = list(self.imfiles.keys())[i]
+            self.catnames[filt] = catname
             
             if os.path.exists(catname) and overwrite == True:
                 os.system(f'rm {catname}')
             
             if not os.path.exists(catname):
-                os.system(f'sex {list(self.imfiles.values())[i]} -c {self.config_file} -MAG_ZEROPOINT ' +
-                          f'{self.zeropoint} -CATALOG_NAME {catname} -GAIN {self.exposures[i]} ' +
-                          f'-WEIGHT_IMAGE {list(self.whtfiles.values())[i]} -WEIGHT_TYPE MAP_WEIGHT')
+                os.system(f'sex {self.imfiles[filt]} -c {self.config_file} -MAG_ZEROPOINT ' +
+                          f'{self.zeropoint} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
+                          f'-WEIGHT_IMAGE {self.whtfiles[filt]} -WEIGHT_TYPE MAP_WEIGHT')
                 
         print('Source Extractor done.')
         
@@ -158,7 +166,12 @@ class sextractor:
 
         return photom
     
-    def plot_counts(self, table, filt, area, cutoff1, cutoff2, magcutoff):
+    def plot_counts(self, table, filt):
+        area = self.areas[filt]
+        cutoff1 = self.psf_fwhm[filt]
+        cutoff2 = self.psf_max[filt]
+        magcutoff = self.psf_mag[filt]
+        
         photom = self.mags_fwhm(table, filt)
         star = Table()
         gal = Table()
@@ -199,8 +212,15 @@ class sextractor:
 
         return x, y_vals, star, gal, photom
     
-    def plot_cats(self, table, filt, area, cutoff1, cutoff2, magcutoff, SB_min, SB_turn, SB_slope):
-        x, y_vals, star, gal, photom = self.plot_counts(table, filt, area, cutoff1, cutoff2, magcutoff)
+    def plot_cats(self, table, filt):
+        cutoff1 = self.psf_fwhm[filt]
+        cutoff2 = self.psf_max[filt]
+        magcutoff = self.psf_mag[filt]
+        SB_min = self.sb_min[filt]
+        SB_turn = self.sb_turn[filt]
+        SB_slope = self.sb_slope[filt]
+        
+        x, y_vals, star, gal, photom = self.plot_counts(table, filt)
     
         x_line = np.linspace(SB_turn, 10, num=100)
         y_line = [SB_min + SB_slope * (math.log10(i) - math.log10(SB_turn)) for i in x_line]
@@ -263,11 +283,8 @@ class sextractor:
         fig.savefig(os.path.join(self.cat_dir, f'{self.field}_{filt}_plot.png'))
 
     def run_plots(self):
-        for i in range(len(self.imfiles)):
-            filt = list(self.imfiles.keys())[i]
+        for filt in self.imfiles.keys():
+            t = Table.read(self.catnames[filt], format='ascii') 
             
-            t = Table.read(self.catnames[i], format='ascii') 
-            
-            self.plot_cats(t, filt, self.areas[i], self.psf_fwhm[filt], self.psf_max[filt], 26, 
-                           self.sb_min[filt], self.sb_turn[filt], self.sb_slope[filt])
+            self.plot_cats(t, filt)
                     
