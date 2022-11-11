@@ -14,7 +14,7 @@ go() - Splits and reprojects i2d.fits files and prints the field, image director
            file - pattern of filenames of the images (replace the filter with *)        
            field - field name to put in image and catalog files
 
-           Returns: Nothing, but prints field, image_dir, and new file pattern
+           Returns: Nothing, but prints field, image_dir, new file pattern, and zeropoints
 
 
 bkgsub() - Can be called after go() to subtract the background from the images.
@@ -33,7 +33,8 @@ initialize() - gets necessary info to run source extractor
 
            Arguments: 
            field - field name
-           zp - photometric zeropoint of the images (default 28.0865 - true for 30mas mosaics)
+           zp_sw - photometric zeropoint of the short wavelength images (default 28.0865 - true for 30mas pixels)
+           zp_lw - photometric zeropoint of the long wavelength images (default 28.0865 - true for 30mas pixels)
            config_file - absolute path to SExtractor configuration file
            cat_dir - directory to place catalogs
            image_dir - directory that contains images
