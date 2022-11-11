@@ -1,4 +1,5 @@
 import os
+import math
 from astropy.io import fits
 from glob import glob
 import photutils
@@ -11,6 +12,8 @@ class prepimg:
         self.file = 'N/A'
         self.imfile = 'N/A'
         self.field = 'N/A'
+        self.zp_sw = 28.0865
+        self.zp_lw = 28.0865
         self.i2d_img = []
         self.sci_img = []
         self.wht_img = []
@@ -45,6 +48,21 @@ class prepimg:
                 print('SAVING', output_image)
                 fits.writeto(output_image, hdu_list[extension].data, header, overwrite=True)
                 
+    def get_zp(self):
+        zeropoints = []
+        for file in self.sci_img:
+            hdul = fits.open(file)
+            header = hdul[0].header
+                        
+            pixel_size = header['PIXAR_A2']**0.5
+            zp = 8.9 - 2.5 * math.log10(1e+6 / ( (360 * 3600) / (2 * math.pi * pixel_size) )**2)
+            zeropoints.append(zp)
+                
+            hdul.close()
+            
+        self.zp_sw = max(zeropoints)
+        self.zp_lw = min(zeropoints)
+                
     def reproject_sci(self):
         for image in self.sci_img + self.wht_img:
             ref_image = self.sci_img[0]
@@ -65,9 +83,11 @@ class prepimg:
         
         self.get_i2d()
         self.split_i2d()
+        self.get_zp()
         self.reproject_sci()
         
-        print(f'Field: {self.field}\nImage Directory: {self.image_dir}\nImage File Pattern: {self.imfile}')
+        print(f'Field: {self.field}\nImage Directory: {self.image_dir}\nImage File Pattern: {self.imfile}\n' +
+              f'SW ZP: {self.zp_sw}\nLW ZP: {self.zp_lw}')
         
     def bkgsub(self, size=100):
         for image in self.sci_img:
