@@ -6,7 +6,7 @@ from matplotlib.ticker import MultipleLocator
 from astropy.table import Table
 import math
 from glob import glob
-                    
+
 class sextractor:
     
     def __init__(self): #make empty data structures and set default psf and sb dictionaries
@@ -20,16 +20,18 @@ class sextractor:
         self.auto_psf()
         self.auto_sb()
     
-    def initialize(self, field='N/A', zp=28.0865, config_file='N/A', cat_dir='N/A', image_dir='N/A', imfile='N/A'):
+    def initialize(self, field='N/A', zp_sw=28.0865, zp_lw=28.0865, config_file='N/A', cat_dir='N/A', 
+                   image_dir='N/A', imfile='N/A'):
         self.field = field #get field, zeropoint, SExtractor config file, catalog directory, and image directory
-        self.zeropoint = zp
+        self.zp_sw = zp_sw
+        self.zp_lw = zp_lw
         self.config_file = config_file
         self.cat_dir = cat_dir
         self.image_dir = image_dir
         self.imfile = imfile
         
         if self.field != 'N/A':
-            print(f'SExtractor initialized\nField: {self.field}\nZeropoint: {self.zeropoint}\nConfig File:' +
+            print(f'SExtractor initialized\nField: {self.field}\nZeropoint: SW-{self.zp_sw} LW-{self.zp_lw}\nConfig File:' +
                   f'{self.config_file}\nCatalog Directory: {self.cat_dir}\nImage Directory: {self.image_dir}' +
                   f'\nImage File Pattern: {self.imfile}')
 
@@ -149,17 +151,22 @@ class sextractor:
             filt = list(self.imfiles.keys())[i]
             self.catnames[filt] = catname
             
+            if int(filt[1:4]) < 250:
+                zp = self.zp_sw
+            else:
+                zp = self.zp_lw
+            
             if os.path.exists(catname) and overwrite == True:
                 os.system(f'rm {catname}')
             
             if not os.path.exists(catname):
                 if dual == False:
                     os.system(f'sex {self.imfiles[filt]} -c {self.config_file} -MAG_ZEROPOINT ' +
-                              f'{self.zeropoint} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
+                              f'{zp} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
                               f'-WEIGHT_IMAGE {self.whtfiles[filt]} -WEIGHT_TYPE MAP_WEIGHT')
                 else:
                     os.system(f'sex {self.imfiles[dual]} {self.imfiles[filt]} -c {self.config_file} -MAG_ZEROPOINT ' +
-                              f'{self.zeropoint} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
+                              f'{zp} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
                               f'-WEIGHT_IMAGE {self.whtfiles[filt]} -WEIGHT_TYPE MAP_WEIGHT')
                 
         print('Source Extractor done.')
@@ -311,3 +318,4 @@ class sextractor:
             t = Table.read(self.catnames[filt], format='ascii') 
             
             self.plot_cats(t, filt)
+                    
