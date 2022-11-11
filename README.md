@@ -9,10 +9,9 @@ Convert default MAST i2d.fits files into pixel-aligned science and weight extens
 
 go() - Splits and reprojects i2d.fits files and prints the field, image directory, and image naming scheme, which can be fed to the sextractor class.
 
-Arguments: image_dir - directory in which the i2d.fits files are stored
-           
-           file - pattern of filenames of the images (replace the filter with *)
-           
+           Arguments: 
+           image_dir - directory in which the i2d.fits files are stored
+           file - pattern of filenames of the images (replace the filter with *)        
            field - field name to put in image and catalog files
 
 Returns: Nothing, but prints field, image_dir, and new file pattern
