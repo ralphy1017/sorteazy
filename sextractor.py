@@ -20,21 +20,18 @@ class sextractor:
         self.auto_psf()
         self.auto_sb()
     
-    def initialize(self, field='N/A', zp=28.0865, config_file='N/A', cat_dir='N/A', image_dir='N/A', imfile='N/A',
-                   sw_pixel=0.031, lw_pixel=0.063):
+    def initialize(self, field='N/A', zp=28.0865, config_file='N/A', cat_dir='N/A', image_dir='N/A', imfile='N/A'):
         self.field = field #get field, zeropoint, SExtractor config file, catalog directory, and image directory
         self.zeropoint = zp
         self.config_file = config_file
         self.cat_dir = cat_dir
         self.image_dir = image_dir
         self.imfile = imfile
-        self.sw_pixel = sw_pixel
-        self.lw_pixel = lw_pixel
         
         if self.field != 'N/A':
             print(f'SExtractor initialized\nField: {self.field}\nZeropoint: {self.zeropoint}\nConfig File:' +
                   f'{self.config_file}\nCatalog Directory: {self.cat_dir}\nImage Directory: {self.image_dir}' +
-                  f'\nImage File Pattern: {self.imfile}\nPixel Size: SW-{self.sw_pixel}, LW-{self.lw_pixel}')
+                  f'\nImage File Pattern: {self.imfile}')
 
     def auto_psf(self): #default psf dictionaries
         self.psf_fwhm = {'F090W': 0.06, 'F115W': 0.05, 'F150W': 0.055, 'F182M': 0.06, 'F200W': 0.065, 
@@ -90,6 +87,23 @@ class sextractor:
             self.whtfiles[filt.upper()] = image.replace('sci', 'wht').replace('SCI', 'WHT').replace('drz', 'wht')
         
         print('Images Found')
+        
+    def get_pixel(self):
+        for i in range(len(self.imfiles)):
+            file = list(self.imfiles.values())[i]
+            filt = list(self.imfiles.keys())[i]
+            hdul = fits.open(file)
+            header = hdul[0].header
+                        
+            if int(filt[1:4]) < 250: #related to central wavelength (SW)
+                self.sw_pixel = header['PIXAR_A2']**0.5
+                
+            else:
+                self.lw_pixel = header['PIXAR_A2']**0.5
+                
+            hdul.close()
+            
+        print(f'Pixel sizes: SW-{self.sw_pixel} LW-{self.lw_pixel}')
     
     def get_areas(self): #used for number counts    
         for i in range(len(self.imfiles)):
@@ -99,7 +113,11 @@ class sextractor:
             data = hdul[0].data
             
             idx = np.where(data > 0)
-            self.areas[filt] = len(idx[0]) * 0.0009 / 60**4
+            
+            if int(filt[1:4]) < 250:
+                self.areas[filt] = len(idx[0]) * self.sw_pixel**2 / 60**4
+            else:
+                self.areas[filt] = len(idx[0]) * self.lw_pixel**2 / 60**4
             
             hdul.close()
             
@@ -125,8 +143,8 @@ class sextractor:
             
         print('Exposure times found.')
     
-    def sextract(self, overwrite=True): #run source extractor
-        for i in range(len(self.imfiles)):
+    def sextract(self, dual=False, overwrite=True): #run source extractor; dual=False for single image
+        for i in range(len(self.imfiles)): #dual=valid filter for dual image (filter to use as detection image)
             catname = os.path.join(self.cat_dir, f'{self.field}_{list(self.imfiles.keys())[i]}_cat.txt')
             filt = list(self.imfiles.keys())[i]
             self.catnames[filt] = catname
@@ -135,20 +153,26 @@ class sextractor:
                 os.system(f'rm {catname}')
             
             if not os.path.exists(catname):
-                os.system(f'sex {self.imfiles[filt]} -c {self.config_file} -MAG_ZEROPOINT ' +
-                          f'{self.zeropoint} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
-                          f'-WEIGHT_IMAGE {self.whtfiles[filt]} -WEIGHT_TYPE MAP_WEIGHT')
+                if dual == False:
+                    os.system(f'sex {self.imfiles[filt]} -c {self.config_file} -MAG_ZEROPOINT ' +
+                              f'{self.zeropoint} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
+                              f'-WEIGHT_IMAGE {self.whtfiles[filt]} -WEIGHT_TYPE MAP_WEIGHT')
+                else:
+                    os.system(f'sex {self.imfiles[dual]} {self.imfiles[filt]} -c {self.config_file} -MAG_ZEROPOINT ' +
+                              f'{self.zeropoint} -CATALOG_NAME {catname} -GAIN {self.exposures[filt]} ' +
+                              f'-WEIGHT_IMAGE {self.whtfiles[filt]} -WEIGHT_TYPE MAP_WEIGHT')
                 
         print('Source Extractor done.')
         
-    def go(self, ow=False): #run code after running self.initialize()
+    def go(self, dual=False, ow=False): #run code after running self.initialize()
         if self.field == 'N/A':
             print('Cannot go without initializing field (call sextractor.initialize())')
             
         self.get_images()
+        self.get_pixel()
         self.get_areas()
         self.get_exposures()
-        self.sextract(overwrite=ow)
+        self.sextract(dual=dual, overwrite=ow)
         
     def mags_fwhm(self, table, filt):
         photom = Table()
@@ -287,4 +311,3 @@ class sextractor:
             t = Table.read(self.catnames[filt], format='ascii') 
             
             self.plot_cats(t, filt)
-                    
