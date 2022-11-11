@@ -20,7 +20,7 @@ go() - Splits and reprojects i2d.fits files and prints the field, image director
 bkgsub() - Can be called after go() to subtract the background from the images.
 
            Arguments: 
-           size - size of times to compute and subtract background from (default 100 pixels)
+           size - size of tiles to compute and subtract background from (default 100 pixels)
 
            Returns: Nothing, but prints field, image_dir, and new file pattern
 
