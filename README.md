@@ -7,7 +7,7 @@ Perform photometry on JWST images using Source Extractor and EAZY.
 
 Convert default MAST i2d.fits files into pixel-aligned science and weight extensions.
 
-go() - Splits and reprojects i2d.fits files and prints the field, image directory, and image naming scheme, which can be fed to the sextractor class.
+__init__() - Splits and reprojects i2d.fits files and prints the field, image directory, and image naming scheme, which can be fed to the sextractor class.
 
            Arguments: 
            image_dir - directory in which the i2d.fits files are stored
@@ -29,16 +29,14 @@ bkgsub() - Can be called after go() to subtract the background from the images.
 
 Run source extractor on science and weight images created by prepimg, and produce plots.
 
-initialize() - gets necessary info to run source extractor
+__init__() - gets necessary info to run source extractor
 
            Arguments: 
            field - field name
-           zp_sw - photometric zeropoint of the short wavelength images (default 28.0865 - true for 30mas pixels)
-           zp_lw - photometric zeropoint of the long wavelength images (default 28.0865 - true for 30mas pixels)
-           config_file - absolute path to SExtractor configuration file
-           cat_dir - directory to place catalogs
            image_dir - directory that contains images
            imfile - image file naming scheme
+           cat_dir - directory to place catalogs
+           zp - array of zeropoints in the form (zp_sw, zp_lw) (default 28.0865 for both - true for 30mas pixels)
 
            Returns: Nothing
 
@@ -62,11 +60,12 @@ set_sb() - sets shape of surface brightness and point source sensitivity limit
 
            Returns: Nothing
 
-go() - gets images, gets pixel sizes, gets areas, gets exposure times, and runs source extractor
+sextract() - gets images, gets pixel sizes, gets areas, gets exposure times, and runs source extractor
 
            Arguments: 
-           dual - dual image mode option (False=don't run dual image, else specify filter to use as detection image)
-           ow - whether or not to overwrite the files
+           config_file - absolute path to SExtractor configuration file
+           dual - dual image mode option (default False=don't run dual image, else specify filter to use as detection image)
+           overwrite - whether or not to overwrite the files (default False)
 
            Returns: Nothing
 
