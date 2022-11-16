@@ -55,7 +55,8 @@ class SExtractor:
         self.sb_slope = {'F090W': -5, 'F115W': -4.8, 'F150W': -5, 'F182M': -5, 'F200W': -5.1,
                          'F210M': -5, 'F277W': -5, 'F300M': -5, 'F335M': -5, 'F356W': -4.9,
                          'F360M': -5, 'F410M': -4.9, 'F444W': -5}
-    
+
+        #Print
         print(f'SExtractor initialized\nField: {self.field}\nZeropoint: SW-{self.zp_sw} LW-{self.zp_lw}'
               f'\nCatalog Directory: {self.cat_dir}\nImage Directory: {self.image_dir}' +
               f'\nImage File Pattern: {self.imfile}')
@@ -145,7 +146,7 @@ class SExtractor:
             hdul.close()
             
         print('Exposure times found.')
-        print('Ready to run Source Extractor!')
+        print('Ready to run Source Extractor!')  
 
     ### Method set_psf
     ### changes the minimum fwhm of an object (fwhm), the maximum fwhm of a star (end), 
