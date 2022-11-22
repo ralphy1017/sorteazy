@@ -9,7 +9,7 @@ from glob import glob
 
 class Eazy:
     
-    def __init__(self,eazypath, params={}):
+    def __init__(self, eazypath, params={}):
         self.eazypath = eazypath          ### Must be in the inputs directory of eazy-photoz
         self.params = params              ### ex: /Users/rafaelortiz/jwst/eazy-photoz/inputs
     
@@ -18,14 +18,19 @@ class Eazy:
             for param, value in self.params.items():
                 f.write(f'{param} {value}\n')
             f.close()
+        print(f'Parameters written to zphot.param at {self.eazypath}/zphot.param')
         
-    def run(self):
+    def run(self, logfile=True):
+        self.logfile = logfile
         os.chdir(self.eazypath)
-        os.system('../src/eazy > logfile')
+        if self.logfile == False:
+            os.system('../src/eazy')
+        else:
+            os.system('../src/eazy > logfile')
         
-    def makePlots(self, output_dir, namestyle):
+    def makePlots(self, output_dir):
         self.output_dir = output_dir
-        self.namestyle = namestyle
+        namestyle = 'photoz_'
 
         files = glob(os.path.join(output_dir, namestyle + "*.obs_sed"))
         indices = [i.split('_')[-2].split('.')[0] for i in files]

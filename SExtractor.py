@@ -6,6 +6,7 @@ from matplotlib.ticker import MultipleLocator
 from astropy.table import Table
 import math
 from glob import glob
+from tqdm import tqdm
 
 class SExtractor:
     
@@ -88,7 +89,7 @@ class SExtractor:
         ### GET PIXEL SIZES FOR SHORT AND LONG WAVELENGTH FILTERS
         ### should be in the header of the image fits files
         
-        for i in range(len(self.imfiles)):
+        for i in tqdm(range(len(self.imfiles)), desc='Calculating Pixel Sizes...'):
             file = list(self.imfiles.values())[i]
             filt = list(self.imfiles.keys())[i]
             hdul = fits.open(file)
@@ -108,8 +109,8 @@ class SExtractor:
         ### this is used for number counts
         ### should also be in the data of the fits file
 
-        print("Calculating areas...")
-        for i in range(len(self.imfiles)):
+        
+        for i in tqdm(range(len(self.imfiles)), desc='Calculating Areas...'):
             file = list(self.imfiles.values())[i]
             filt = list(self.imfiles.keys())[i]
             hdul = fits.open(file)
@@ -131,7 +132,7 @@ class SExtractor:
         ### If the field is a mosaic of multiple pointings with minimal overlap-- 
         ### should multiply self.exposures by the number of pointings before calling SExtractor
 
-        for i in range(len(self.imfiles)):
+        for i in tqdm(range(len(self.imfiles)),desc='Calculating Exposure Times...'):
             file = list(self.imfiles.values())[i]
             filt = list(self.imfiles.keys())[i]
             hdul = fits.open(file)

@@ -5,6 +5,7 @@ import warnings
 from glob import glob
 import photutils
 from reproject import reproject_interp  # https://reproject.readthedocs.io/en/stable/
+from tqdm import tqdm
 
 class PrepImg:
     
@@ -48,7 +49,7 @@ class PrepImg:
             # Only the science extension header has any info including WCS
             # So we'll just use that for all the output files
 
-            for extension in 'sci wht'.split():
+            for extension in tqdm('sci wht'.split(), desc='Saving individual images...'):
                 output_image = os.path.join(self.image_dir, f'{self.field}_{filt}_{extension}.fits')
                 
                 if extension == 'sci':
@@ -66,7 +67,7 @@ class PrepImg:
         ### If SW and LW images have the same pixel size, zp_sw == zp_lw
 
         zeropoints = []
-        for file in self.sci_img:
+        for file in tqdm(self.sci_img, desc="Calculating zeropoints..."):
             hdul = fits.open(file)
             header = hdul[0].header
                         
@@ -82,7 +83,7 @@ class PrepImg:
         ### REPROJECT SCI AND WHT FILES
         ### Having the images on the same pixel grid will be beneficial for SExtractor
 
-        for image in self.sci_img + self.wht_img:
+        for image in tqdm(self.sci_img + self.wht_img, desc='Reprojecting pixel grids...'):
             ref_image = self.sci_img[0]
 
             hdul = fits.open(ref_image)
@@ -93,7 +94,7 @@ class PrepImg:
             hdu = fits.open(image)
             data = hdu[0]
 
-            reprojected_data, footprint = reproject_interp(data, ref_header)
+            reprojected_data, footprint = tqdm(reproject_interp(data, ref_header))
             
             fits.writeto(image, reprojected_data.astype('float32'), ref_header, overwrite=True)
             hdu.close()
@@ -109,11 +110,11 @@ class PrepImg:
     ### size is the size of each square that background is measured and subtracted from
 
     def bkgsub(self, size=100):
-        for image in self.sci_img:
+        for image in tqdm(self.sci_img, desc='Background Subtraction...'):
             hdul = fits.open(image)
             data = hdul['sci'].data
 
-            background_map = photutils.Background2D(data, size, filter_size=5)    
+            background_map = photutils.Background2D(data, size, filter_size=5)  
             data = data - background_map.background.astype('float32')
 
             hdul['sci'].data = data

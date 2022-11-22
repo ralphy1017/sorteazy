@@ -3,7 +3,7 @@ Perform photometry on JWST images using Source Extractor and EAZY.
 
 ## Important Classes and Methods
 
-### prepimg
+### PrepImg.py
 
 Convert default MAST i2d.fits files into pixel-aligned science and weight extensions.
 
@@ -25,7 +25,7 @@ bkgsub() - Can be called after go() to subtract the background from the images.
            Returns: Nothing, but prints field, image_dir, and new file pattern
 
 
-### sextractor
+### SExtractor.py
 
 Run source extractor on science and weight images created by prepimg, and produce plots.
 
@@ -74,3 +74,43 @@ run_plots() - creates photometry plots using previously created SExtractor catal
            Arguments: None
            Returns: Nothing
            
+
+### MakeCats.py
+
+Makes a custom catalog in AB Mag using each catalog generated from SExtractor so that it may be passed to eazy to find the Photometric Redshift of each object in the catalog
+
+__init__() - Receives necessary info to initialize a field with its catalogs
+            
+            Arguments:
+            field - the field name
+            cat_dir - catalog directory where SExtractor catalogs exist on your machine
+            cat_file - catalog file namestyle so that it can group catalogs in each filter
+            pixsize - pixel size found in fits file data
+
+match() - Filters nondetections and aligns each catalog using SkyCoord and then writes to a single catalog for eazy
+
+            Arguments:
+            det_filt - string of the name of the filter to use as the matching filter
+
+
+### eazyMethods.py
+
+Runs eazy wherever it exists on your machine and then generates SED vs Chi^2 Plots with eazy photometric Output
+
+__init__() - Receives location of eazy and the custom parameters 
+
+            Arguments:
+            eazypath - path to eazy-photoz on your machine to navigate files properly
+            params - dictionary of parameters with correct parameter formatting to then write to zphot.param so that it  
+                     overides zphot.param.default
+
+makeparam() - makes zphot.param file 
+
+run() - runs eazy on your machine, set logfile=False to show output. Otherwise, output is written to a log file 
+        ex: ../src/eazy > logifle
+
+makePlots() - makes SED template plots and Chi^2 vs Z plots from eazy Output. 
+
+            Arguments:
+            output_dir - path of eazy output directory
+
