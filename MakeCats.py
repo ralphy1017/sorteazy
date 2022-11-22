@@ -5,6 +5,7 @@ from astropy.table import Table
 import math
 from glob import glob
 from astropy.coordinates import SkyCoord
+from tqdm import tqdm
 
 class MakeCats:
 
@@ -86,7 +87,7 @@ class MakeCats:
     ### gets photometry for all filters and puts them in a dictionary for each attribute
 
     def photom_dicts(self):
-        for i in range(len(self.cats)):
+        for i in tqdm(range(len(self.cats)),desc='Getting photometry...'):
             filt = self.filts[i]
             t = Table.read(self.cats[i], format='ascii')
             photom = self.photometry(t, filt)
@@ -115,7 +116,7 @@ class MakeCats:
         #create skycoord object with detection filter
         c = SkyCoord(ra=self.ra[det_filt], dec=self.dec[det_filt], unit='deg')
 
-        for i in self.filts:
+        for i in tqdm(self.filts,desc='SkyCoord Match...'):
             if i != det_filt:
                 #convert to arrays for easy data manipulation
                 ra1 = np.array(self.ra_dict[i])
@@ -160,7 +161,7 @@ class MakeCats:
             self.y[filt][idx] = 0
             self.err[filt][idx] = 0
 
-        for i in range(len(self.mag[det_filt]) - 1, -1, -1):
+        for i in tqdm(range(len(self.mag[det_filt]) - 1, -1, -1), desc='Filtering Non-Detections...'):
             #Count number of filters that didn't detect each object
             nondetections = 0
             for filt in self.filts:
@@ -178,7 +179,7 @@ class MakeCats:
             
         #Create overall table
         self.final_table = Table()
-        self.final_table['id'] = range(1, len(self.mag[det_filt])+1)
+        self.final_table['#id'] = range(1, len(self.mag[det_filt])+1)
         self.final_table['RA'] = self.ra[det_filt]
         self.final_table['DEC'] = self.dec[det_filt]
         self.final_table['X'] = self.x[det_filt]

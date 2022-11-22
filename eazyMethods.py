@@ -9,7 +9,7 @@ from glob import glob
 
 class Eazy:
     
-    def __init__(self,eazypath, params={}):
+    def __init__(self, eazypath, params={}):
         self.eazypath = eazypath          ### Must be in the inputs directory of eazy-photoz
         self.params = params              ### ex: /Users/rafaelortiz/jwst/eazy-photoz/inputs
     
@@ -18,25 +18,29 @@ class Eazy:
             for param, value in self.params.items():
                 f.write(f'{param} {value}\n')
             f.close()
+        print(f'Parameters written to zphot.param at {self.eazypath}/zphot.param')
         
-    def run(self):
+    def run(self, logfile=True):
+        self.logfile = logfile
         os.chdir(self.eazypath)
-        os.system('../src/eazy > logfile')
+        if self.logfile == False:
+            os.system('../src/eazy')
+        else:
+            os.system('../src/eazy > logfile')
         
-    def makePlots(self, output_dir, namestyle):
+    def makePlots(self, output_dir):
         self.output_dir = output_dir
-        self.namestyle = namestyle
+        namestyle = 'photz_'
 
         files = glob(os.path.join(output_dir, namestyle + "*.obs_sed"))
         indices = [i.split('_')[-2].split('.')[0] for i in files]
-        idx = indices[39]
         
         z_cat = os.path.join(output_dir, 'photz.zout')
         t = Table.read(z_cat, format='ascii')
-        high_z = t[np.where(t['z_p'] > 5)]['id']
-        odds = {}
-        for i in range(len(t['id'])):
-            odds[i+1] = t[i]['odds']
+        high_z = t[np.where(t['z_p'] > 7)]['id']
+        #odds = {}
+        #for i in range(len(t['id'])):
+        #    odds[i+1] = t[i]['odds']
         
         for idx in high_z:
             obs_sed = os.path.join(output_dir, namestyle+str(idx)+".obs_sed")
@@ -62,7 +66,7 @@ class Eazy:
             ferr_img = obs_sed['err_cat']
             z = pz['z']
             chi2 = pz['pz']
-            odd = odds[int(i)]
+            #odd = odds[int(i)]
             
             fig, ax = plt.subplots(1,2)    
             fig.set_size_inches(12,6)
@@ -71,7 +75,7 @@ class Eazy:
             
             ax[0].plot(lamb_sed, flux_sed, lw=1, color='black', ls='-', zorder=8)
             ax[0].errorbar(x=lamb_img, y=flux_img, yerr=ferr_img, color = 'red', fmt='o', capsize=4, ms=5, zorder=3)
-            fig.suptitle(f'Star id {idx} EAZY Results | {z_a} {z_p} | Q$_z$ = {odd}', fontsize=20)
+            fig.suptitle(f'Star id {idx} EAZY Results | {z_a} {z_p} ', fontsize=20)
             ax[0].set_xlabel('Wavelength [Angstroms]', fontsize=15)
             ax[0].set_ylabel('Flux [F$_{\lambda}$]', fontsize=15)
             ax[0].set_xlim(0.5*10**4, 4.7*10**4)
