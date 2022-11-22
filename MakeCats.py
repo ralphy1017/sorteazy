@@ -87,7 +87,7 @@ class MakeCats:
     ### gets photometry for all filters and puts them in a dictionary for each attribute
 
     def photom_dicts(self):
-        for i in tqdm(range(len(self.cats))):
+        for i in tqdm(range(len(self.cats)),desc='Getting photometry...'):
             filt = self.filts[i]
             t = Table.read(self.cats[i], format='ascii')
             photom = self.photometry(t, filt)
@@ -116,7 +116,7 @@ class MakeCats:
         #create skycoord object with detection filter
         c = SkyCoord(ra=self.ra[det_filt], dec=self.dec[det_filt], unit='deg')
 
-        for i in tqdm(self.filts):
+        for i in tqdm(self.filts,desc='SkyCoord Match...'):
             if i != det_filt:
                 #convert to arrays for easy data manipulation
                 ra1 = np.array(self.ra_dict[i])

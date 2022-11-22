@@ -37,7 +37,7 @@ class PrepImg:
         ### SPLIT I2D FILES
         ### Creates 'sci' and 'wht' files from the i2d images
         
-        for input_image in self.i2d_img:
+        for input_image in tqdm(self.i2d_img,desc='Saving individual images...'):
             for i in range(len(input_image)):
                 if input_image[i] == 'f' and (input_image[i+4] == 'w' or input_image[i+4] == 'm') and input_image[i+1] in '0 1 2 3 4 5 6 7 8 9'.split():
                     filt = input_image[i:i+5]
@@ -49,7 +49,7 @@ class PrepImg:
             # Only the science extension header has any info including WCS
             # So we'll just use that for all the output files
 
-            for extension in tqdm('sci wht'.split(), desc='Saving individual images...'):
+            for extension in 'sci wht'.split():
                 output_image = os.path.join(self.image_dir, f'{self.field}_{filt}_{extension}.fits')
                 
                 if extension == 'sci':
