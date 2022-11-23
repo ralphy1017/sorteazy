@@ -1,32 +1,18 @@
+# basic imports
 import numpy as np
 import os
 from glob import glob
-from copy import deepcopy
-from os.path import join
-import warnings
-
-import astropy  # version 4.2 is required to write magnitudes to ecsv file
-import astropy.io.fits as pyfits
-from astropy.io import fits
-import astropy.wcs as wcs
-from astropy.table import QTable, Table
-import astropy.units as u
-from astropy.visualization import make_lupton_rgb, SqrtStretch, LogStretch, LinearStretch, hist, simple_norm
-from astropy.visualization.mpl_normalize import ImageNormalize
-from astropy.coordinates import SkyCoord
-from astropy.stats import sigma_clipped_stats
-
-from importlib import reload
-
-import photutils  # for background subtraction
-
 import matplotlib
 import matplotlib.pyplot as plt
+# to suppress warnings
+import warnings
 
+# astropy and photutils and image things
+from astropy.io import fits
+from astropy.stats import sigma_clipped_stats
+import photutils  # for background subtraction
 from scipy.optimize import golden
-
 from PIL import Image, ImageEnhance
-
 
 class Trilogy:
 
@@ -350,7 +336,4 @@ class Trilogy:
         im.save(os.path.join(self.image_dir, f'{self.field}_RGB_sat.png'))
 
         self.imrgb_enhanced = np.array(im)
-
-
-
         return self.imrgb_enhanced

@@ -83,7 +83,8 @@ class PrepImg:
         ### REPROJECT SCI AND WHT FILES
         ### Having the images on the same pixel grid will be beneficial for SExtractor
 
-        for image in tqdm(self.sci_img + self.wht_img, desc='Reprojecting pixel grids...'):
+        images = self.sci_img + self.wht_img
+        for image in tqdm(images, desc='Reprojecting pixel grids...'):
             ref_image = self.sci_img[0]
 
             hdul = fits.open(ref_image)
@@ -94,7 +95,7 @@ class PrepImg:
             hdu = fits.open(image)
             data = hdu[0]
 
-            reprojected_data, footprint = tqdm(reproject_interp(data, ref_header))
+            reprojected_data, footprint = reproject_interp(data, ref_header)
             
             fits.writeto(image, reprojected_data.astype('float32'), ref_header, overwrite=True)
             hdu.close()
