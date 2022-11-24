@@ -86,14 +86,14 @@ __init__() - Receives necessary info to initialize a field with its catalogs
             cat_dir - catalog directory where SExtractor catalogs exist on your machine
             cat_file - catalog file namestyle so that it can group catalogs in each filter
             pixsize - pixel size found in fits file data
-
+	    
 	    Returns: Nothing
 
 match() - Filters nondetections and aligns each catalog using SkyCoord and then writes to a single catalog for eazy
 
             Arguments:
             det_filt - string of the name of the filter to use as the matching filter
-
+	    
 	    Returns: Nothing
 
 
@@ -107,7 +107,7 @@ __init__() - Receives location of eazy and the custom parameters
             eazypath - path to eazy-photoz on your machine to navigate files properly
             params - dictionary of parameters with correct parameter formatting to then write to zphot.param so that it  
                      overides zphot.param.default
-
+		     
 	    Returns: Nothing
 
 makeparam() - makes zphot.param file 
