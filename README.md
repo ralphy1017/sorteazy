@@ -148,6 +148,9 @@ __init__() - receives location of image files, as well as the field name for sav
 
 bkgsub() - subtracts background from science images
 
+	    Arguments: None
+	    Returns: Nothing
+
 auto_colors() - assigns colors to each filter from purple (short wavelength) to red (long wavelength)
 
 	    Arguments: None
@@ -167,6 +170,9 @@ make_stamp() - creates a color image stamp to assign levels to the various param
 	    Returns: color image stamp as a matplotlib plot
 
 make_RGB() - makes full field RGB image from scaling found with make_stamp()
+
+	    Arguments: None
+	    Returns: Nothing
 
 enhance() - enhances full field RGB image and saves it.
 
