@@ -59,7 +59,6 @@ class PrepImg:
                 
                 header['EXTNAME'] = extension
                 
-                print('SAVING', output_image)
                 fits.writeto(output_image, hdu_list[extension].data, header, overwrite=True)
                 
         ### GET ZEROPOINTS
@@ -90,8 +89,6 @@ class PrepImg:
             hdul = fits.open(ref_image)
             ref_header = hdul['sci'].header
 
-            print(f'Reprojecting {image}...')  # 1 minute
-
             hdu = fits.open(image)
             data = hdu[0]
 
@@ -121,7 +118,6 @@ class PrepImg:
             hdul['sci'].data = data
             newfile = image.replace(".fits", "_bkgsub.fits")
             self.bkg_img.append(newfile)
-            print('SAVING', newfile)
             hdul.writeto(newfile, overwrite=True)
             hdul.close()
             

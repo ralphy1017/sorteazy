@@ -87,10 +87,14 @@ __init__() - Receives necessary info to initialize a field with its catalogs
             cat_file - catalog file namestyle so that it can group catalogs in each filter
             pixsize - pixel size found in fits file data
 
+	    Returns: Nothing
+
 match() - Filters nondetections and aligns each catalog using SkyCoord and then writes to a single catalog for eazy
 
             Arguments:
             det_filt - string of the name of the filter to use as the matching filter
+
+	    Returns: Nothing
 
 
 ### eazyMethods.py
@@ -104,13 +108,73 @@ __init__() - Receives location of eazy and the custom parameters
             params - dictionary of parameters with correct parameter formatting to then write to zphot.param so that it  
                      overides zphot.param.default
 
+	    Returns: Nothing
+
 makeparam() - makes zphot.param file 
+
+	    Arguments: None
+	    Returns: Nothing
 
 run() - runs eazy on your machine, set logfile=False to show output. Otherwise, output is written to a log file 
         ex: ../src/eazy > logifle
 
-makePlots() - makes SED template plots and Chi^2 vs Z plots from eazy Output. 
+	    Arguments: 
+	    logfile - logfile=False to show output, logfile=True to save output to a log file (default True)
+
+	    Returns: Nothing (but runs EAZY so saves all of the resulting files in OUTPUT directory)
+
+makePlots() - makes SED template plots, Chi^2 vs Z plots from eazy output, and color stamps of individual high-z galaxies. 
 
             Arguments:
-            output_dir - path of eazy output directory
+            output_dir - path of eazy OUTPUT directory
+	    imrgb - array of RGB values for entire field
+	    zmin - minimum redshift value to make plots for (default 7)
 
+	    Returns: eazy plots + color stamps of high-z galaxies
+
+
+### Trilogy.py
+
+Creates color images from science images so that it can be fed to eazyMethods.py for plotting individual galaxies.
+
+__init__() - receives location of image files, as well as the field name for saving images.
+
+	    Arguments:
+	    image_dir - directory that contains science images
+	    imfiles - pattern of filenames within image_dir
+	    field - name of field
+
+	    Returns: Nothing, but prints filters and images corresponding to each filter
+
+bkgsub() - subtracts background from science images
+
+auto_colors() - assigns colors to each filter from purple (short wavelength) to red (long wavelength)
+
+	    Arguments: None
+	    Returns: prints contribution of each filter to R, G, B (in that order)
+
+make_stamp() - creates a color image stamp to assign levels to the various parameters of Trilogy.
+
+	    Arguments:
+	    sample_size - side width of square image (default 1000)
+	    dx - shift from the center of the image in pixels (right = positive) (default 0)
+	    dy - shift from the center of the image in pixels (up = positive) (default 0)
+	    noiselum - saturation value of pixels at noisesig sigma above the mean surface brightness value (default 0.12) (spans from 0-1)
+	    satpercent - percent of pixels to be saturated at 1.0 (default 0.001)
+ 	    noisesig - number of sigma above the mean for pixels to have a value of noiselum (default 1)
+	    noisefloorsig - number of sigma below the mean for pixels to be black (0.0) (default 2)
+	    
+	    Returns: color image stamp as a matplotlib plot
+
+make_RGB() - makes full field RGB image from scaling found with make_stamp()
+
+enhance() - enhances full field RGB image and saves it.
+
+	    Arguments:
+	    color - color enhancement multiplier (1.0 = no change) (default 1.3)
+	    contrast - contrast enhancement multiplier (default 1.4)
+	    brightness - brightness enhancement multiplier (default 1.1)
+	    sharpness - sharpness enhancement multiplier (default 1.9)
+
+	    Returns: array of RGB values, and saves enhanced image in image_dir
+		    

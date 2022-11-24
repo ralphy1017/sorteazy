@@ -4,6 +4,7 @@ import os
 from glob import glob
 import matplotlib
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 # to suppress warnings
 import warnings
 
@@ -148,7 +149,7 @@ class Trilogy:
             data_mean, data_median, data_stddev = sigma_clipped_stats(datasorted)
             m = data_mean
             r = data_stddev
-            print('%g +/- %g' % (m, r))
+            #print('%g +/- %g' % (m, r))
 
             if correctbias:
                 x0 = m - noisefloorsig * r
@@ -175,8 +176,8 @@ class Trilogy:
         #    xc = 3417
         yc = int(ny / 2)
         xc = int(nx / 2)
-        print(xc, yc)
-        print(xc+dx, yc+dy)
+        #print(xc, yc)
+        #print(xc+dx, yc+dy)
         
         ylo = yc - sample_size / 2 + dy
         yhi = yc + sample_size / 2 + dy
@@ -211,13 +212,11 @@ class Trilogy:
         background_maps = {}
 
         # find background maps
-        for filt in self.filters:
-            print('Finding background in ' + filt)
+        for filt in tqdm(self.filters, desc='Finding background maps'):
             background_maps[filt] = photutils.Background2D(self.image_data[filt], size, filter_size=5) #size - size of bkg boxes
 
         # subtract background
-        for filt in self.filters:
-            print('Subtracting background in ' + filt)
+        for filt in tqdm(self.filters, desc='Subtracting backgrounds'):
             self.bkgsub_data[filt] = self.image_data[filt] - background_maps[filt].background
 
     ### Method auto_colors
@@ -271,9 +270,8 @@ class Trilogy:
         # make stamp image
         scaled_images = {}
         self.levels_all = {}
-        for filt in self.filters:
+        for filt in tqdm(self.filters, desc='Scaling colors'):
             data = self.bkgsub_data[filt]
-            print(filt, data.shape)
 
             my_stamp_extent = self.stamp_extent(data, self.sample_size, self.dx, self.dy)
             stamp = image_stamp(data, self.sample_size, self.dx, self.dy)
@@ -283,7 +281,7 @@ class Trilogy:
             scaled_images[filt] = scaled
     
         rgb_total = 0
-        for filt in self.filters:
+        for filt in tqdm(self.filters, desc='Combining colors'):
             rgb = r, g, b = self.filter_colors[filt][:, np.newaxis, np.newaxis] * scaled_images[filt]
             imrgb = np.array([r, g, b]).transpose((1,2,0)).astype(np.uint8)    
             rgb_total = rgb_total + rgb
@@ -299,14 +297,14 @@ class Trilogy:
     def make_RGB(self):
         #make image for entire field
         scaled_images = {}
-        for filt in self.filters:
+        for filt in tqdm(self.filters, desc='Scaling colors'):
             data = self.bkgsub_data[filt]
             levels = self.levels_all[filt]
             scaled = self.imscale2(data, levels, self.noiselum)
             scaled_images[filt] = scaled
             
         rgb_total = 0
-        for filt in self.filters:
+        for filt in tqdm(self.filters, desc='Combining colors'):
             rgb = r, g, b = self.filter_colors[filt][:, np.newaxis, np.newaxis] * scaled_images[filt]
             rgb_total = rgb_total + rgb
             
