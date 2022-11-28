@@ -129,6 +129,7 @@ makePlots() - makes SED template plots, Chi^2 vs Z plots from eazy output, and c
 		output_dir - path of eazy OUTPUT directory
 		imrgb - array of RGB values for entire field
 		zmin - minimum redshift value to make plots for (default 7)
+		zmax - maximum redshift value to make plots for (default 100)
 
 		Returns: eazy plots + color stamps of high-z galaxies
 
