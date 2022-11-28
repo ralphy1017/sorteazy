@@ -39,7 +39,7 @@ class Eazy:
     ### Method makeplots
     ### main plotting function
 
-    def makePlots(self, output_dir, imrgb, zmin=7):
+    def makePlots(self, output_dir, imrgb, zmin=7, zmax=100):
         self.output_dir = output_dir
         namestyle = 'photz_' # for EAZY output files
 
@@ -50,7 +50,7 @@ class Eazy:
         # get main catalog file as astropy table, filter high-z objects
         z_cat = os.path.join(output_dir, 'photz.zout')
         t = Table.read(z_cat, format='ascii')
-        high_z = t[np.where(t['z_p'] > zmin)]['id']
+        high_z = t[np.where((t['z_p'] > zmin) & (t['z_p'] < zmax))]['id']
 
         # get SExtractor matched catalog file for object positions
         catfile = self.params['CATALOG_FILE']
