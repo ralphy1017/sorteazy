@@ -146,7 +146,7 @@ class MakeCats:
         ### removes any objects detected in fewer filters than min_filters
         ### also saves the matched catalog file
 
-    def match(self, det_filt, tolerance=0.0001, min_filters=4):
+    def match(self, det_filt, tolerance=0.0001, min_filters=4, flux=False):
         #call previous methods to make matched tables
         self.photom_dicts()
         self.align(det_filt)
@@ -189,7 +189,17 @@ class MakeCats:
         for filt in self.filts:
             self.final_table[filt] = self.mag[filt]
             self.final_table[filt + '_err'] = self.err[filt]
+        
+        if flux == True:
+            for filt in self.filts:
+                for i in range(len(self.final_table[filt])):
+                    self.final_table[filt][i] = (10**(-0.4*(self.final_table[filt][i]+48.6)))*1e-7*1e4*1e26*1e6
+                for i in range(len(self.final_table[filt + '_err'])):
+                    self.final_table[filt + '_err'][i] = (2.5/np.log(10))*self.final_table[filt + '_err'][i]*(self.final_table[filt][i])
             
         #Save catalog
+        if flux == True:
+            self.catname = f'{self.field}_total_flux_cat.txt'
+            
         print(f'SAVING {os.path.join(self.cat_dir, self.catname)}') 
         self.final_table.write(os.path.join(self.cat_dir, self.catname), format='ascii', overwrite=True)
