@@ -1,4 +1,4 @@
-# sorteazy
+# SORTeaZy
 Perform photometry on JWST images using Source Extractor and EAZY.
 
 ## Important Classes and Methods
